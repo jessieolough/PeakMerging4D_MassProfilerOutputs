@@ -1,0 +1,272 @@
+#Script to merge peaks from the features detected with Mass Profiler
+#Uses method appropriate for features measured by Max Ion Volume
+#Author: Jessica M O'Loughlin (s1907024@ed.ac.uk)
+#Supervisor: Prof. Karl Burgess (karl.burgess@ed.ac.uk)
+#Date created: 13/08/2024
+#Major edits made on 23/04/2026 to improve the m/z, RT, and CCS grouping algorithms
+
+import pandas as pd
+import numpy as np
+from datetime import datetime
+
+###############################################################################
+#TODO: User-defined inputs (please edit according to your peak merging needs)
+#Group the m/z, RT and CCS values by user-defined tolerances 
+mz_tol = 3 #1 = 1ppm
+RT_tol = 0.3 #1 = 1 minute, 0.5 = 30 seconds 
+CCS_tol = 2 #1 = 1%
+
+file_name = "20241112_NEG_HRdm_FeatureTable_AllFeatures" #Do not include the ".csv" extension
+###############################################################################
+
+today_date = datetime.today().strftime('%Y%m%d')
+
+#Define functions used in the pipeline
+def LoadAndTidyData():
+    #Load in the data
+    df = pd.read_csv(f'{file_name}.csv')
+
+    #Make row with columns names the df column headers
+    df.columns = df.iloc[3]
+    #Remove unnecessary rows
+    df = df.drop(df.index[[0,1,2,3]])
+    #Reset index
+    df = df.reset_index(drop = True)
+    df = df.rename_axis(None, axis=1)
+    #Convert all variables containing numbers to numeric-type variables
+    df = df.apply(pd.to_numeric, 
+                  errors = "ignore"
+                  )
+    #The .xls -> .csv file contains four columns named "SD"
+    # For downstream processes, these need to be individually referenced
+    # --> temporarily rename just now
+    df.columns.values[2] = "SD_RT"
+    df.columns.values[4] = "SD_DT"
+    df.columns.values[6] = "SD_CCS"
+    df.columns.values[8] = "SD_mz"
+    print("Summary of input data:")
+    print(df[['ID', 'm/z', 'RT', 'CCS']])
+    
+    return df
+    
+def GroupBy_mz(df):
+    
+    df = df.sort_values(['m/z'], ascending=[True])
+    
+    ##Split into m/z groups
+    mz_bin = []
+    for mz_val in list(df['m/z']):
+        
+        #Calculate uncertainty tolerance
+        uncertainty = (mz_val/1000000)*mz_tol
+        max_val_mz = mz_val+uncertainty
+        min_val_mz = mz_val-uncertainty
+        #Only add NEW value if it is increasing in value to the previous item added to the list
+        if mz_bin == []: #if list empty, add first value
+            mz_bin.append(max_val_mz)
+        else:
+            if min_val_mz > mz_bin[-1]: #Check if the new feature's m/z is outwith the ppm range of the previous one
+                mz_bin.append(max_val_mz) #If out of range: add new upper limit to check against the next m/z
+            else: #if not: just "duplicate" the current limit to check against the next m/z
+                mz_bin.append(mz_bin[-1])
+    
+    df['mz_bin'] = mz_bin
+    
+    mz_clusters = df.groupby('mz_bin', observed = True) #observed = True added to remove FutureWarning message
+    #Keep the dataframe from each group in a new list from the groupby object
+    mz_clusters = [g.copy() for _, g in mz_clusters]
+    
+    return mz_clusters
+    
+def GroupBy_mzRT(mz_clusters):
+    
+    mzRT_dataframes = list()
+
+    #Loop through each m/z group + separate by RT groups
+    for table in mz_clusters:
+        table = pd.DataFrame(table)
+        table = table.sort_values(['RT'], ascending=[True])
+        
+        ##Split each m/z group into RT groups
+        RT_bin = []
+        for RT_val in list(table['RT']):
+
+            #Calculate uncertainty tolerance
+            max_val_RT = RT_val+RT_tol
+            min_val_RT = RT_val-RT_tol
+                
+            #Only add NEW value if it is increasing in value to the previous item added to the list
+            if RT_bin == []: #if list empty, add first value
+                RT_bin.append(max_val_RT)
+            else:
+                if min_val_RT > RT_bin[-1]: #Check if the new feature's RT is outwith the RT range of the previous one
+                    RT_bin.append(max_val_RT) #If out of range: add new upper limit to check against the next RT
+                else: #if not: just "duplicate" the current limit to check against the next RT
+                    RT_bin.append(RT_bin[-1])
+                    
+        table['RT_bin'] = RT_bin
+        
+        RT_clusters = table.groupby('RT_bin', observed = True)
+        
+        #Add each m/z-RT group individually to the new list
+        for mzRT_group in RT_clusters:
+            mzRT_dataframes.append(mzRT_group)
+        
+    #Keep the dataframe from each group in a new list from the groupby object
+    mzRT_dataframes = [g.copy() for _, g in mzRT_dataframes]
+    
+    return mzRT_dataframes
+
+    
+def GroupBy_mzRTCCS(mzRT_dataframes):
+
+    mzRTCCS_dataframes = list()
+
+    #Loop through each m/z/RT group + separate by CCS groups
+    for table in mzRT_dataframes:
+        table = pd.DataFrame(table)
+        table = table.sort_values(['CCS'], ascending=[True])
+        
+        ##Split each m/z group into RT groups
+        CCS_bin = []
+        for CCS_val in list(table['CCS']):
+            
+            #Calculate uncertainty tolerance
+            uncertainty_CCS = (CCS_val/100)*CCS_tol
+            max_val_CCS = CCS_val + uncertainty_CCS
+            min_val_CCS = CCS_val - uncertainty_CCS
+                
+            #Only add NEW value if it is increasing in value to the previous item added to the list
+            if CCS_bin == []: #if list empty, add first value
+                CCS_bin.append(max_val_CCS)
+            else:
+                if min_val_CCS > CCS_bin[-1]: #Check if the new feature's CCS is outwith the CCS range of the previous one
+                    CCS_bin.append(max_val_CCS) #If out of range: add new upper limit to check against the next CCS
+                else: #if not: just "duplicate" the current limit to check against the next CCS
+                    CCS_bin.append(CCS_bin[-1])
+                    
+        table['CCS_bin'] = CCS_bin
+        
+        CCS_clusters = table.groupby('CCS_bin', observed = True)
+        
+        #Add each m/z-RT group individually to the new list
+        for mzRTCCS_group in CCS_clusters:
+            mzRTCCS_dataframes.append(mzRTCCS_group)
+        
+    #Keep the dataframe from each group in a new list from the groupby object
+    mzRTCCS_dataframes = [g.copy() for _, g in mzRTCCS_dataframes]
+    
+    return mzRTCCS_dataframes
+    
+def GroupsToRow_MakeFinalDataframe(mzRTCCS_dataframes):
+    #Get list of sample columns only
+    colnames = mzRTCCS_dataframes[0].columns
+    non_samples = ['ID', 'RT', 'SD_RT', 'DT', 'SD_DT', 'CCS', 'SD_CCS',
+           'm/z', 'SD_mz', 'Abundance', 'RSD', 'Z', 'Ions', 'Freq.', 'Q Score',
+           'Sat.', 'Mark', 'mz_bin', 'RT_bin','CCS_bin']
+    samples = [header for header in colnames if header not in non_samples]
+
+    #Loop through each mz+RT+CCS group + sum intensities across samples + add to final dataframe
+    final_dataframe = pd.DataFrame()
+
+    for feature in mzRTCCS_dataframes:
+        feature = feature.reset_index(drop=True)
+        
+        #Get the sum of the intensities across samples
+        #Replace 0.001 with NaN --> these are not summed
+        sum_feature = pd.DataFrame(feature)[samples].replace(0.001, np.NaN).sum(axis=0)
+        sum_feature = sum_feature.to_frame()
+        sum_feature = sum_feature.transpose()
+        #Replace 0.0 with 0.001 to bring this value back into the data
+        sum_feature = sum_feature.replace(0.0, 0.001)
+        # print(sum_feature)
+        
+        #Add in relevant non-sample columns back into the dataframe
+        sum_feature['ID'] = ""
+        sum_feature.at[0,'ID'] = list(feature['ID'].values) #Show which feature were/were not merged together
+        sum_feature['RT'] = round(feature['RT'].mean(), 3)
+        sum_feature['SD_RT'] = round(feature['SD_RT'].mean(), 3)
+        sum_feature['DT'] = round(feature['DT'].mean(), 3)
+        sum_feature['SD_DT'] = round(feature['SD_DT'].mean(), 3)
+        sum_feature['CCS'] = round(feature['CCS'].mean(), 3)
+        sum_feature['SD_CCS'] = round(feature['SD_CCS'].mean(), 2)
+        sum_feature['m/z'] = round(feature['m/z'].mean(), 3)
+        sum_feature['SD_mz'] = round(feature['SD_mz'].mean(), 4)
+        sum_feature['Abundance'] = round(feature['Abundance'].mean(), 3)
+        sum_feature['RSD'] = round(feature['RSD'].mean(), 2)
+        sum_feature['Z'] = feature['Z'].mean()
+        sum_feature['Ions'] = feature['Ions'].mean()
+        sum_feature['Freq.'] = feature['Freq.'].mean()
+        sum_feature['Q Score'] = feature['Q Score'].mean()
+        sum_feature['Sat.'] = feature['Sat.'][0]
+        sum_feature['Mark'] = feature['Mark'][0]
+        
+        #Reorder columns
+        column_order = ['ID', 'RT', 'SD_RT', 'DT', 'SD_DT', 'CCS', 'SD_CCS',
+               'm/z', 'SD_mz', 'Abundance', 'RSD', 'Z', 'Ions', 'Freq.', 'Q Score',
+               'Sat.', 'Mark']
+        column_order = column_order + samples
+        sum_feature = sum_feature[column_order]
+        #Return SD_x column names to their original SD name
+        sum_feature = pd.DataFrame(sum_feature).rename(columns={'SD_RT':'SD', 
+                                                                'SD_DT':'SD',
+                                                                'SD_CCS':'SD',
+                                                                'SD_mz':'SD'})
+        
+        final_dataframe = pd.concat([final_dataframe, sum_feature])
+        
+    return final_dataframe
+        
+    
+def SaveFinalDataAsCSV(final_dataframe):
+    today_date = datetime.today().strftime('%Y%m%d')
+    final_dataframe = final_dataframe.reset_index(drop=True)
+    final_dataframe.to_csv(f'{today_date}_{file_name}_MergedFeaturesFinal.csv', index = False)
+    print(f'{today_date}_{file_name}_MergedFeaturesFinal.csv saved to your directory')
+
+#Run main workflow
+if __name__ == "__main__":
+
+    #Get start time
+    startTime = datetime.now()
+    print("===============================")
+    print("startTime:", startTime)
+    print(f"File Name: {file_name}.csv")
+    print("mz_tol:", mz_tol)
+    print("RT_tol:", RT_tol)
+    print("CCS_tol:", CCS_tol)
+    print("===============================")
+    
+    df = LoadAndTidyData()
+    print("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+    print("LoadAndTidyData() complete")
+    print("Initial number of features in dataset:", len(df))
+    print("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+    
+    mz_clusters = GroupBy_mz(df)
+    print("GroupBy_mz() complete")
+    print("Number of m/z groups:", len(mz_clusters))
+    print("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+
+    mzRT_dataframes = GroupBy_mzRT(mz_clusters)
+    print("GroupBy_mzRT() complete")
+    print("Number of m/z-RT groups:", len(mzRT_dataframes))
+    print("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+    
+    mzRTCCS_dataframes = GroupBy_mzRTCCS(mzRT_dataframes)
+    print("GroupBy_mzRTCCS() complete")
+    print("Number of m/z-RT-CCS groups:", len(mzRTCCS_dataframes))
+    print("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+    
+    final_dataframe = GroupsToRow_MakeFinalDataframe(mzRTCCS_dataframes)
+    print("GroupsToRow_MakeFinalDataframe() complete")
+    print("Number of features after Peak Merging:", len(final_dataframe))
+    print("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+    
+    SaveFinalDataAsCSV(final_dataframe)
+    
+    print("===============================")
+    print("stopTime:", datetime.now())
+    print("Total process run time:", datetime.now() - startTime)
+    print("===============================")
+
