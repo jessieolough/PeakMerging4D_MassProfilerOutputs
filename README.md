@@ -9,11 +9,11 @@ This script is designed to work with **unannotated Mass Profiler CSV outputs**.
 This script was developed using Python v3.9.12. The pandas, numpy, and datetime modules are required. 
 
 #### 2) Data structure
-The input data should be the exported CSV feature table from Mass Profiler, with the following structure:
+The input data should be the exported CSV feature table from Mass Profiler, with the structure below. This can also be viewed in the ExampleData directory of this repo in `ExampleData_MassProfilerFeatureTableOutput.csv`. 
 
 <img width="1295" height="179" alt="image" src="https://github.com/user-attachments/assets/ce94c200-e25d-4255-9907-9d28aa90260c" />
 
-Importantly, the input should contain the `RT`, `SD`, `DT`, `SD`, `CCS`, `SD`, `m/z`, `SD`, `Abundance`, `RSD`, `Z`, `Ions`, `Freq.`, `Q Score`, `Sat.`, and `Mark` columns. The script searches for all of these columns specifically and treats all other columns as samples. 
+Importantly, the input should contain the `ID`, `RT`, `SD`, `DT`, `SD`, `CCS`, `SD`, `m/z`, `SD`, `Abundance`, `RSD`, `Z`, `Ions`, `Freq.`, `Q Score`, `Sat.`, and `Mark` columns. The script searches for all of these columns specifically and treats all other columns as samples. 
 
 #### 3) Prepare and run the script
 Have the working directory of which ever environment you are working in set to the directory containing your desired input data. This is also where the merged-peaks output will be saved. Edit `mz_tol`, `RT_tol`, and `CCS_tol` as numeric inputs and `file_name` as a string containing the name of your input file. Do not include the ".csv" in file_name.  
