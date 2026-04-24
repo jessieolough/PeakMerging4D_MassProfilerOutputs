@@ -11,15 +11,7 @@ This script was developed using Python v3.9.12. The pandas, numpy, and datetime 
 #### 2) Data structure
 The input data should be the exported CSV feature table from Mass Profiler, with the following structure:
 
-|----------------------------------------------|-------|-------|--------|-------|--------|------|----------|--------|-----------|------|----|------|-------|---------|------|-------|----------|----------|----------|
-| MassProfiler(10.0.2.200) 12/11/2024 14:27:12 |       |       |        |       |        |      |          |        |           |      |    |      |       |         |      |       |          |          |          |
-| Data Source: all features in the table       |       |       |        |       |        |      |          |        |           |      |    |      |       |         |      |       |          |          |          |
-| 1816 of 1816 Features                        |       |       |        |       |        |      |          |        |           |      |    |      |       |         |      |       |          |          |          |
-|                                              |       |       |        |       |        |      |          |        |           |      |    |      |       |         |      |       |          |          |          |
-| ID                                           | RT    | SD    | DT     | SD    | CCS    | SD   | m/z      | SD     | Abundance | RSD  | Z  | Ions | Freq. | Q Score | Sat. | Mark  | SampA    | SampB    | SampC    |
-| 1                                            | 0.224 | 0.01  | 27.746 | 0.062 | 224.91 | 0.51 | 368.9775 | 0.0006 | 0.8187699 | 0.05 | -1 | 4    | 36    | 100     | x    | FALSE | 1.09E+08 | 1.19E+08 | 1.18E+08 |
-| 2                                            | 0.223 | 0.006 | 24.662 | 0.061 | 199.61 | 0.5  | 368.978  | 0.0004 | 0.3771503 | 0.25 | -1 | 4    | 35    | 100     | x    | FALSE | 6.08E+07 | 5.95E+07 | 6.26E+07 |
-| 3                                            | 0.21  | 0.005 | 27.793 | 0.032 | 224.45 | 0.26 | 412.967  | 0.0002 | 0.2394053 | 0.11 | -1 | 4    | 36    | 100     | x    | FALSE | 3.39E+07 | 3.47E+07 | 3.41E+07 |
+<img width="1295" height="179" alt="image" src="https://github.com/user-attachments/assets/ce94c200-e25d-4255-9907-9d28aa90260c" />
 
 Importantly, the input should contain the `RT`, `SD`, `DT`, `SD`, `CCS`, `SD`, `m/z`, `SD`, `Abundance`, `RSD`, `Z`, `Ions`, `Freq.`, `Q Score`, `Sat.`, and `Mark` columns. The script searches for all of these columns specifically and treats all other columns as samples. 
 
