@@ -1,4 +1,4 @@
-# PeakMerging4D
+# PeakMerging4D_MassProfilterOutputs
 Many peak shapes in mass spectrometry may be detected as multiple peaks, where they should be treated as one peak. To merge these together and improve interpretation of results, this Python-based algorithm has been developed to identify peaks within user-defined m/z, RT, and CCS tolerances and sum their intensities to treat them as one peak. 
 
 This script is designed to work with **unannotated Mass Profiler CSV outputs**. 
@@ -11,6 +11,8 @@ This script was developed using Python v3.9.12. The pandas, numpy, and datetime 
 #### 2) Data structure
 The input data should be the exported CSV feature table from Mass Profiler, with the following structure:
 
+|                                              |       |       |        |       |        |      |          |        |           |      |    |      |       |         |      |       |          |          |          |
+|----------------------------------------------|-------|-------|--------|-------|--------|------|----------|--------|-----------|------|----|------|-------|---------|------|-------|----------|----------|----------|
 | MassProfiler(10.0.2.200) 12/11/2024 14:27:12 |       |       |        |       |        |      |          |        |           |      |    |      |       |         |      |       |          |          |          |
 | Data Source: all features in the table       |       |       |        |       |        |      |          |        |           |      |    |      |       |         |      |       |          |          |          |
 | 1816 of 1816 Features                        |       |       |        |       |        |      |          |        |           |      |    |      |       |         |      |       |          |          |          |
