@@ -16,10 +16,8 @@ mz_tol = 3 #1 = 1ppm
 RT_tol = 0.3 #1 = 1 minute, 0.5 = 30 seconds 
 CCS_tol = 2 #1 = 1%
 
-file_name = "20241112_NEG_HRdm_FeatureTable_AllFeatures" #Do not include the ".csv" extension
+file_name = "ExampleData_MassProfilerFeatureTableOutput" #Do not include the ".csv" extension
 ###############################################################################
-
-today_date = datetime.today().strftime('%Y%m%d')
 
 #Define functions used in the pipeline
 def LoadAndTidyData():
@@ -183,7 +181,9 @@ def GroupsToRow_MakeFinalDataframe(mzRTCCS_dataframes):
         
         #Add in relevant non-sample columns back into the dataframe
         sum_feature['ID'] = ""
-        sum_feature.at[0,'ID'] = list(feature['ID'].values) #Show which feature were/were not merged together
+        # sum_feature.at[0,'ID'] = list(feature['ID'].values) #Show which feature were/were not merged together
+        # sum_feature['ID'] = list(feature['ID'].values) #Show which feature were/were not merged together
+        sum_feature.at[sum_feature.index[0],'ID'] = str(list(feature['ID'].values)) #Show which feature were/were not merged together
         sum_feature['RT'] = round(feature['RT'].mean(), 3)
         sum_feature['SD_RT'] = round(feature['SD_RT'].mean(), 3)
         sum_feature['DT'] = round(feature['DT'].mean(), 3)
@@ -219,10 +219,9 @@ def GroupsToRow_MakeFinalDataframe(mzRTCCS_dataframes):
         
     
 def SaveFinalDataAsCSV(final_dataframe):
-    today_date = datetime.today().strftime('%Y%m%d')
     final_dataframe = final_dataframe.reset_index(drop=True)
-    final_dataframe.to_csv(f'{today_date}_{file_name}_MergedFeaturesFinal.csv', index = False)
-    print(f'{today_date}_{file_name}_MergedFeaturesFinal.csv saved to your directory')
+    final_dataframe.to_csv(f'{file_name}_MergedFeaturesFinal.csv', index = False)
+    print(f'{file_name}_MergedFeaturesFinal.csv saved to your directory')
 
 #Run main workflow
 if __name__ == "__main__":
@@ -269,4 +268,3 @@ if __name__ == "__main__":
     print("stopTime:", datetime.now())
     print("Total process run time:", datetime.now() - startTime)
     print("===============================")
-
