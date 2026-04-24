@@ -3,12 +3,47 @@ Many peak shapes in mass spectrometry may be detected as multiple peaks, where t
 
 This script is designed to work with **unannotated Mass Profiler CSV outputs**. 
 
+# How to use the Peak Merging script
+### Requirements
+#### 1) Python Environment
+This script was developed using Python v3.9.12. The pandas, numpy, and datetime modules are required. 
+
+#### 2) Data structure
+The input data should be the exported CSV feature table from Mass Profiler, with the following structure:
+
+| MassProfiler(10.0.2.200) 12/11/2024 14:27:12 |       |       |        |       |        |      |          |        |           |      |    |      |       |         |      |       |          |          |          |
+| Data Source: all features in the table       |       |       |        |       |        |      |          |        |           |      |    |      |       |         |      |       |          |          |          |
+| 1816 of 1816 Features                        |       |       |        |       |        |      |          |        |           |      |    |      |       |         |      |       |          |          |          |
+|                                              |       |       |        |       |        |      |          |        |           |      |    |      |       |         |      |       |          |          |          |
+| ID                                           | RT    | SD    | DT     | SD    | CCS    | SD   | m/z      | SD     | Abundance | RSD  | Z  | Ions | Freq. | Q Score | Sat. | Mark  | SampA    | SampB    | SampC    |
+| 1                                            | 0.224 | 0.01  | 27.746 | 0.062 | 224.91 | 0.51 | 368.9775 | 0.0006 | 0.8187699 | 0.05 | -1 | 4    | 36    | 100     | x    | FALSE | 1.09E+08 | 1.19E+08 | 1.18E+08 |
+| 2                                            | 0.223 | 0.006 | 24.662 | 0.061 | 199.61 | 0.5  | 368.978  | 0.0004 | 0.3771503 | 0.25 | -1 | 4    | 35    | 100     | x    | FALSE | 6.08E+07 | 5.95E+07 | 6.26E+07 |
+| 3                                            | 0.21  | 0.005 | 27.793 | 0.032 | 224.45 | 0.26 | 412.967  | 0.0002 | 0.2394053 | 0.11 | -1 | 4    | 36    | 100     | x    | FALSE | 3.39E+07 | 3.47E+07 | 3.41E+07 |
+
+Importantly, the input should contain the `RT`, `SD`, `DT`, `SD`, `CCS`, `SD`, `m/z`, `SD`, `Abundance`, `RSD`, `Z`, `Ions`, `Freq.`, `Q Score`, `Sat.`, and `Mark` columns. The script searches for all of these columns specifically and treats all other columns as samples. 
+
+#### 3) Prepare and run the script
+Have the working directory of which ever environment you are working in set to the directory containing your desired input data. This is also where the merged-peaks output will be saved. Edit `mz_tol`, `RT_tol`, and `CCS_tol` as numeric inputs and `file_name` as a string containing the name of your input file. Do not include the ".csv" in file_name.  
+
+```
+###############################################################################
+#TODO: User-defined inputs (please edit according to your peak merging needs)
+#Group the m/z, RT and CCS values by user-defined tolerances 
+mz_tol = 3 #1 = 1ppm
+RT_tol = 0.3 #1 = 1 minute, 0.5 = 30 seconds 
+CCS_tol = 2 #1 = 1%
+
+file_name = "20241112_NEG_HRdm_FeatureTable_AllFeatures" #Do not include the ".csv" extension
+###############################################################################
+```
+In the terminal, short summary outputs to indicate the effect each grouping step of the algorithm is having on the data are printed as well as the progress of the script. 
+
 # How the Peak Merging Algorithm works
 ### Simplified example of initial feature table
 Example User-defined thresholds:
-m/z (ppm) = 3
-Retention Time (min) = 0.3
-CCS (%) = 2
+- m/z (ppm) = 3
+- Retention Time (min) = 0.3
+- CCS (%) = 2
 
 Whilst the script handles all the different parameters that are present in Mass Profiler outputs, the only ones used in the algorithm are the m/z, Retention Time (RT), Collision Cross Section (CCS), and intensity values across the samples. 
 
