@@ -11,7 +11,6 @@ This script was developed using Python v3.9.12. The pandas, numpy, and datetime 
 #### 2) Data structure
 The input data should be the exported CSV feature table from Mass Profiler, with the following structure:
 
-|                                              |       |       |        |       |        |      |          |        |           |      |    |      |       |         |      |       |          |          |          |
 |----------------------------------------------|-------|-------|--------|-------|--------|------|----------|--------|-----------|------|----|------|-------|---------|------|-------|----------|----------|----------|
 | MassProfiler(10.0.2.200) 12/11/2024 14:27:12 |       |       |        |       |        |      |          |        |           |      |    |      |       |         |      |       |          |          |          |
 | Data Source: all features in the table       |       |       |        |       |        |      |          |        |           |      |    |      |       |         |      |       |          |          |          |
@@ -84,6 +83,7 @@ The data is first split into m/z groups:
 | 9         | 142.929 | 0.212 | 274.95 | 0.001   | 795645  | 0.001   |
 | 10        | 142.929 | 0.213 | 274.97 | 454324  | 0.001   | 0.001   |
 
+---
 The script then loops through each m/z group to further group these into appropriate RT groups. 
 
 | FeatureID | m/z    | RT    | CCS    | Samp1   | Samp2 | Samp3   |
@@ -111,6 +111,7 @@ The script then loops through each m/z group to further group these into appropr
 | 9         | 142.929 | 0.212 | 274.95 | 0.001  | 795645 | 0.001 |
 | 10        | 142.929 | 0.213 | 274.97 | 454324 | 0.001  | 0.001 |
 
+---
 Within these m/z-RT groups, these are split further according to their CCS values
 
 | FeatureID | m/z    | RT    | CCS    | Samp1   | Samp2 | Samp3   |
