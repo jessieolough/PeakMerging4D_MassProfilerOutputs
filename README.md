@@ -1,7 +1,7 @@
 # PeakMerging4D_MassProfilterOutputs
 Many peak shapes in mass spectrometry may be detected as multiple peaks, where they should be treated as one peak. To merge these together and improve interpretation of results, this Python-based algorithm has been developed to identify peaks within user-defined m/z, RT, and CCS tolerances and sum their intensities to treat them as one peak. 
 
-This script is designed to work with **unannotated Mass Profiler CSV outputs**. 
+The two versions of process (each in two separate scripts) are designed to work with **unannotated Mass Profiler CSV outputs (PeakMergingScript_UnannotatedData.py)** and **annotated Mass Profiler CSV outputs (PeakMergingScript_nnotatedData.py)**. 
 
 # How to use the Peak Merging script
 ### Requirements
@@ -9,11 +9,15 @@ This script is designed to work with **unannotated Mass Profiler CSV outputs**.
 This script was developed using Python v3.9.12. The pandas, numpy, and datetime modules are required. 
 
 #### 2) Data structure
-The input data should be the exported CSV feature table from Mass Profiler, with the structure below. This can also be viewed in the ExampleData directory of this repo in `ExampleData_MassProfilerFeatureTableOutput.csv`. 
+The input data should be the exported CSV feature table from Mass Profiler, with the data structures shown in `ExampleData_UnannotatedMassProfilerOutput.csv` for unannotated data and `ExampleData_AnnotatedMassProfilerOutput.csv` for annotated data (In the ExampleData folder of this repository).
 
-<img width="1295" height="179" alt="image" src="https://github.com/user-attachments/assets/ce94c200-e25d-4255-9907-9d28aa90260c" />
+Importantly:
 
-Importantly, the input should contain the `ID`, `RT`, `SD`, `DT`, `SD`, `CCS`, `SD`, `m/z`, `SD`, `Abundance`, `RSD`, `Z`, `Ions`, `Freq.`, `Q Score`, `Sat.`, and `Mark` columns. The script searches for all of these columns specifically and treats all other columns as samples. 
+- An unannotated input should contain the `ID`, `RT`, `SD`, `DT`, `SD`, `CCS`, `SD`, `m/z`, `SD`, `Abundance`, `RSD`, `Z`, `Ions`, `Freq.`, `Q Score`, `Sat.`, and `Mark` columns. 
+
+- An annotated input should contain the `ID`, `Name`, `CAS`, `Formula`, `Ion Species`, `Mass (DB)`, `RT`, `SD`, `DT`, `SD`, `CCS`, `SD`, `m/z`, `SD`, `Abundance`, `RSD`, `Z`, `Ions`, `Freq.`, `Q Score`, `Sat.`, and `Mark` columns. 
+
+The script searches for all of these columns specifically and treats all other columns as samples. 
 
 #### 3) Prepare and run the script
 Have the working directory of which ever environment you are working in set to the directory containing your desired input data. This is also where the merged-peaks output will be saved. Edit `mz_tol`, `RT_tol`, and `CCS_tol` as numeric inputs and `file_name` as a string containing the name of your input file. Do not include the ".csv" in file_name.  
